@@ -121,6 +121,12 @@ end)
 -- Enable break indent
 vim.o.breakindent = true
 
+-- Set default tab settings
+vim.o.tabstop = 4        -- Number of spaces tabs count for
+vim.o.shiftwidth = 4     -- Size of an indent
+vim.o.softtabstop = 4    -- Number of spaces tabs count for in insert mode
+vim.o.expandtab = true   -- Use spaces instead of tabs
+
 -- Save undo history
 vim.o.undofile = true
 
@@ -898,8 +904,67 @@ require('lazy').setup({
     end,
   },
 
+  -- Poimandres colorscheme
+  {
+    'olivercederborg/poimandres.nvim',
+    lazy = false,
+    priority = 1000,
+    config = function()
+      require('poimandres').setup {}
+    end,
+  },
+
+  -- OldWorld colorscheme
+  {
+    'dgox16/oldworld.nvim',
+    lazy = false,
+    priority = 1000,
+  },
+
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
+
+  -- Harpoon - Quick file navigation
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      local harpoon = require 'harpoon'
+      harpoon:setup()
+
+      -- Basic keymaps
+      vim.keymap.set('n', '<leader>a', function()
+        harpoon:list():add()
+      end, { desc = 'Harpoon: [A]dd file' })
+
+      vim.keymap.set('n', '<leader>e', function()
+        harpoon.ui:toggle_quick_menu(harpoon:list())
+      end, { desc = 'Harpoon: Op[e]n menu' })
+
+      -- Quick navigation to harpooned files
+      vim.keymap.set('n', '<leader>1', function()
+        harpoon:list():select(1)
+      end, { desc = 'Harpoon: Go to file 1' })
+      vim.keymap.set('n', '<leader>2', function()
+        harpoon:list():select(2)
+      end, { desc = 'Harpoon: Go to file 2' })
+      vim.keymap.set('n', '<leader>3', function()
+        harpoon:list():select(3)
+      end, { desc = 'Harpoon: Go to file 3' })
+      vim.keymap.set('n', '<leader>4', function()
+        harpoon:list():select(4)
+      end, { desc = 'Harpoon: Go to file 4' })
+
+      -- Navigate through harpoon list
+      vim.keymap.set('n', '<C-S-P>', function()
+        harpoon:list():prev()
+      end, { desc = 'Harpoon: Previous file' })
+      vim.keymap.set('n', '<C-S-N>', function()
+        harpoon:list():next()
+      end, { desc = 'Harpoon: Next file' })
+    end,
+  },
 
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
@@ -974,11 +1039,11 @@ require('lazy').setup({
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
@@ -1013,4 +1078,4 @@ require('lazy').setup({
 })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 et
+-- vim: ts=4 sts=4 sw=4 et
