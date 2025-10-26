@@ -209,6 +209,20 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+-- Markdown checklist toggle
+vim.keymap.set('n', '<leader>c', function()
+    local line = vim.api.nvim_get_current_line()
+    local new_line
+    if line:match('%- %[ %]') then
+        new_line = line:gsub('%- %[ %]', '- [x]', 1)
+    elseif line:match('%- %[x%]') then
+        new_line = line:gsub('%- %[x%]', '- [ ]', 1)
+    else
+        return
+    end
+    vim.api.nvim_set_current_line(new_line)
+end, { desc = 'Toggle markdown [c]hecklist' })
+
 -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
 -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
 -- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
@@ -660,6 +674,10 @@ require('lazy').setup({
                     source = 'if_many',
                     spacing = 2,
                     format = function(diagnostic)
+                        -- Filter out line length warnings
+                        if diagnostic.message:match('[Ll]ine.*length') or diagnostic.message:match('[Ll]ine.*long') or diagnostic.message:match('max.*line') then
+                            return nil
+                        end
                         local diagnostic_message = {
                             [vim.diagnostic.severity.ERROR] = diagnostic.message,
                             [vim.diagnostic.severity.WARN] = diagnostic.message,
