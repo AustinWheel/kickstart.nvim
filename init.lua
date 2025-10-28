@@ -176,6 +176,13 @@ vim.o.confirm = true
 vim.o.wrap = true -- Enable visual line wrapping
 vim.o.linebreak = true -- Wrap at word boundaries instead of mid-word
 
+-- Cursor settings
+-- n-v-c: Normal, Visual, Command = block
+-- i-ci-ve: Insert, Command-line insert, Visual exclude = thin vertical line (ver25)
+-- t: Terminal mode = thin vertical line (ver25)
+-- r-cr: Replace, Command-line replace = horizontal line (hor20)
+vim.o.guicursor = 'n-v-c:block,i-ci-ve:ver25,t:ver25,r-cr:hor20,o:hor50,a:blinkwait700-blinkoff400-blinkon250-Cursor/lCursor,sm:block-blinkwait175-blinkoff150-blinkon175'
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -223,6 +230,37 @@ vim.keymap.set('n', '<leader>c', function()
     vim.api.nvim_set_current_line(new_line)
 end, { desc = 'Toggle markdown [c]hecklist' })
 
+-- Compile and run Java file
+vim.keymap.set('n', '<leader>Tr', function()
+    -- Save file first
+    vim.cmd 'write'
+
+    local filepath = vim.fn.expand '%:p'
+    local filename = vim.fn.expand '%:t'
+    local classname = vim.fn.expand '%:t:r'
+    local filedir = vim.fn.expand '%:p:h'
+
+    if vim.fn.expand '%:e' ~= 'java' then
+        vim.notify('Not a Java file!', vim.log.levels.ERROR)
+        return
+    end
+
+    -- Compile
+    local compile_cmd = string.format('javac "%s"', filepath)
+    local compile_result = vim.fn.system(compile_cmd)
+
+    if vim.v.shell_error ~= 0 then
+        vim.notify('Compilation failed:\n' .. compile_result, vim.log.levels.ERROR)
+        return
+    end
+
+    -- Run in terminal
+    local run_cmd = string.format('cd "%s" && java %s', filedir, classname)
+
+    -- Open terminal and run
+    vim.cmd('TermExec cmd="' .. run_cmd .. '"')
+end, { desc = '[T]erminal [R]un Java file' })
+
 -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
 -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
 -- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
@@ -240,6 +278,17 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
     callback = function()
         vim.hl.on_yank()
+    end,
+})
+
+-- Auto save on text change and when leaving insert mode
+vim.api.nvim_create_autocmd({ 'TextChanged', 'InsertLeave' }, {
+    desc = 'Auto save when text changes or leaving insert mode',
+    pattern = '*',
+    callback = function()
+        if vim.bo.modified and vim.bo.buftype == '' and vim.fn.expand '%' ~= '' then
+            vim.cmd 'silent! write'
+        end
     end,
 })
 
@@ -371,6 +420,7 @@ require('lazy').setup({
                 { '<leader>s', group = '[S]earch' },
                 { '<leader>t', group = '[T]oggle' },
                 { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
+                { '<leader>T', group = '[T]erminal' },
             },
         },
     },
@@ -978,6 +1028,43 @@ require('lazy').setup({
             vim.keymap.set('n', '<C-S-N>', function()
                 harpoon:list():next()
             end, { desc = 'Harpoon: Next file' })
+        end,
+    },
+
+    -- Toggleterm - Better terminal management
+    {
+        'akinsho/toggleterm.nvim',
+        version = '*',
+        opts = {
+            size = function(term)
+                if term.direction == 'horizontal' then
+                    return 15
+                elseif term.direction == 'vertical' then
+                    return vim.o.columns * 0.4
+                end
+            end,
+            open_mapping = [[<c-\>]],
+            hide_numbers = true,
+            shade_terminals = true,
+            start_in_insert = true,
+            insert_mappings = true,
+            terminal_mappings = true,
+            persist_size = true,
+            direction = 'float',
+            close_on_exit = true,
+            shell = vim.o.shell,
+            float_opts = {
+                border = 'curved',
+                winblend = 0,
+            },
+        },
+        config = function(_, opts)
+            require('toggleterm').setup(opts)
+
+            -- Custom terminal keymaps
+            vim.keymap.set('n', '<leader>Tf', '<cmd>ToggleTerm direction=float<cr>', { desc = '[T]erminal [F]loating' })
+            vim.keymap.set('n', '<leader>Th', '<cmd>ToggleTerm direction=horizontal<cr>', { desc = '[T]erminal [H]orizontal' })
+            vim.keymap.set('n', '<leader>Tv', '<cmd>ToggleTerm direction=vertical<cr>', { desc = '[T]erminal [V]ertical' })
         end,
     },
 
