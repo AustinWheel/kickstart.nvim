@@ -556,6 +556,61 @@ require('lazy').setup({
         },
     },
     {
+        -- Java support with Gradle, Maven, debugging, and testing
+        'nvim-java/nvim-java',
+        dependencies = {
+            'nvim-java/lua-async-await',
+            'nvim-java/nvim-java-core',
+            'nvim-java/nvim-java-test',
+            'nvim-java/nvim-java-dap',
+            'MunifTanjim/nui.nvim',
+            'neovim/nvim-lspconfig',
+            'mfussenegger/nvim-dap',
+        },
+        config = function()
+            require('java').setup({
+                jdk = {
+                    auto_install = true,
+                },
+                java_test = {
+                    enable = true,
+                },
+                java_debug_adapter = {
+                    enable = true,
+                },
+                -- Additional settings for better Gradle support
+                spring_boot_tools = {
+                    enable = false, -- Disable if not using Spring Boot
+                },
+                notifications = {
+                    dap = false, -- Reduce notification noise
+                },
+            })
+
+            -- Setup jdtls after java.setup() is complete
+            require('lspconfig').jdtls.setup({
+                settings = {
+                    java = {
+                        configuration = {
+                            updateBuildConfiguration = "automatic",
+                        },
+                        import = {
+                            gradle = {
+                                enabled = true,
+                                wrapper = {
+                                    enabled = true,
+                                },
+                            },
+                        },
+                        autobuild = {
+                            enabled = true,
+                        },
+                    },
+                },
+            })
+        end,
+    },
+    {
         -- Main LSP Configuration
         'neovim/nvim-lspconfig',
         dependencies = {
@@ -571,6 +626,9 @@ require('lazy').setup({
 
             -- Allows extra capabilities provided by blink.cmp
             'saghen/blink.cmp',
+
+            -- Ensure nvim-java is loaded before lspconfig
+            'nvim-java/nvim-java',
         },
         config = function()
             -- Brief aside: **What is LSP?**
@@ -782,6 +840,8 @@ require('lazy').setup({
                         },
                     },
                 },
+
+                -- Note: jdtls is configured separately via nvim-java plugin
             }
 
             -- Ensure the servers and tools above are installed
